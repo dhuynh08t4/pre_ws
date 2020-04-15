@@ -184,6 +184,36 @@ class EmployeesController extends AppController{
 		$this->_api_response('notvaild');
 		// exit;
 	}
+	private function canDeleteEmployee($employee_id){
+		// check school 
+		$loginEmployee = $this->loginEmployee;
+		$school_id = $loginEmployee['school_id'];
+		$employee = $this->Employees->find()->where(['id' => $employee_id, 'school_id' => $school_id])->first();
+		if( empty($employee)){
+			return false;
+		} 
+		// Check Class
+		$this->_loadModels('ClassEmployeeRefers');
+		$hasClass = $this->ClassEmployeeRefers->find()->where(['employee_id' => $employee_id, 'school_id' => $school_id])->first();
+		if( !empty($hasClass)){
+			return false;
+		}
+		// OK
+		return true;
+		
+	}
+	public function deleteEmployee(){
+		$this->_checkPermission('employee', 'canManager');
+		$e_id = $this->request->getQuery('id');
+		$loginEmployee = $this->loginEmployee;
+		$school_id = $loginEmployee['school_id'];
+		$employee = $this->Employees->find()->where(['id' => $e_id, 'school_id' => $school_id])->first();
+		if( $employee && $this->canDeleteEmployee($e_id)){
+			$result = $this->Employees->delete($employee);
+			$this->_api_response($result, $result);
+		}
+		$this->_api_response('notvaild');
+	}
 	
 	/* Input
 		data = array(
@@ -199,7 +229,7 @@ class EmployeesController extends AppController{
 		$result = $this->Employees->updateFullName($school_id);
 		$this->_api_response(true, $result);
 	}
-	public function updatedEmployee(){
+	public function updateEmployee(){
 		$this->_checkPermission('employee', 'canManager');
 		$this->_loadModels('Schools','Roles', 'EmployeePositions');
 		$this->_loadModels('Schools','Roles', 'EmployeePositions');
@@ -214,11 +244,9 @@ class EmployeesController extends AppController{
 			// $all_roles = $this->Roles->getListRole();
 			// $all_possitions = $this->EmployeePositions->getListRoleBySchool($school_id);
 		}
-		$this->_api_response('notvaild');
-		exit;
-		
+		$this->_api_response('notvaild');	
 	}
-	public function updatedEmployees(){
+	public function updateEmployees(){
 		$this->_checkPermission('employee', 'canManager');
 		$this->_loadModels('Schools','Roles', 'EmployeePositions');
 		$this->_loadModels('Schools','Roles', 'EmployeePositions');
@@ -236,7 +264,6 @@ class EmployeesController extends AppController{
 			// $all_possitions = $this->EmployeePositions->getListRoleBySchool($school_id);
 		}
 		$this->_api_response('notvaild');
-		exit;
 		
 	}
 	

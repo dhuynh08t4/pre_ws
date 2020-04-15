@@ -32,11 +32,11 @@ class EmployeesTable extends Table
 				
             ],
            // 'hasMany' => ['SchoolClass'],
-           'belongsToMany' => [
-				'SchoolClasses' => [
-					'joinTable' => 'ClassEmployeeRefers'
-				]			
-			]
+           // 'belongsToMany' => [
+				// 'SchoolClasses' => [
+					// 'joinTable' => 'ClassEmployeeRefers'
+				// ]			
+			// ]
        ]);
     }
 	public function updateFullName($school_id = null){
