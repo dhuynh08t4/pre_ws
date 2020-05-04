@@ -232,17 +232,40 @@ class EmployeesController extends AppController{
 	public function updateEmployee(){
 		$this->_checkPermission('employee', 'canManager');
 		$this->_loadModels('Schools','Roles', 'EmployeePositions');
-		$this->_loadModels('Schools','Roles', 'EmployeePositions');
 		$loginEmployee = $this->loginEmployee;
 		$school_id = $loginEmployee['school_id'];
+		$role_id = $loginEmployee['role_id'];
 		$employee = $this->request->getData('data');
-		// debug( $employees); exit;
-		if( !empty($employee)){
-			$check_school = $this->Employees->find()->where(['id' => $employee, 'school_id' => $school_id])->toList();
-			$check_school = Hash::contains($check_school, $list_ids);
-			debug( $check_school); exit;
-			// $all_roles = $this->Roles->getListRole();
-			// $all_possitions = $this->EmployeePositions->getListRoleBySchool($school_id);
+		if( empty( $employee['id']) ) $this->_api_response('notvaild');
+		$cond = [
+			'Employees.id' => $employee['id'],
+			'Employees.school_id IN' => $school_id, // Check schools
+		];
+		if( !empty( $employee['role_id'])){ // Check role_id
+			$all_roles = $this->Roles->getListRole($role_id, 'list_id');
+			$cond['Employees.role_id IN'] = $all_roles;
+		}
+		if( !empty( $employee['position_id'])){ // Check position_id
+			$all_possitions = $this->EmployeePositions->getSchoolPositions($school_id, 'list_id');
+			$cond['Employees.position_id IN'] = $all_possitions;
+		}
+		if( !empty( $employee['username']) ){
+			$check_username = $this->Employees->find()->where(['username' => $employee['username'], 'id !=' => $employee['id']])->count();
+			if( $check_username)  $this->_api_response(false, [], __('Username exists', true), 412);
+			$employee['username_changed'] = 1;
+		}
+		if( !empty( $employee['email']) ){
+			$check_email = $this->Employees->find()->where(['email' => $employee['email'], 'id !=' => $employee['id']])->count();
+			if( $check_email)  $this->_api_response(false, [], __('Email exists', true), 412);
+		}
+		$curEmp = $this->Employees->find()->where($cond)->first()->toArray();
+		if( empty( $curEmp) ) $this->_api_response('notvaild'); 
+		foreach($curEmp as $key => &$val){
+			if( isset( $employee[$key] )) $val = $employee[$key];
+		}
+		$_employee = $this->Employees->newEntity($curEmp);
+		if ($this->Employees->save($_employee)) {
+			$this->_api_response(true, $_employee);
 		}
 		$this->_api_response('notvaild');	
 	}

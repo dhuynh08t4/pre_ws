@@ -15,7 +15,6 @@ class EmployeesTable extends Table
 					'className' => 'Schools',
 					'foreignKey' => 'school_id'
 				],
-				
                'Roles' => [
 					'className' => 'Roles',
 					'foreignKey' => 'role_id'
